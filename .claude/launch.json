@@ -1,0 +1,21 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": [
+        "run",
+        "-d",
+        "web-server",
+        "--release",
+        "--dart-define-from-file=env.json",
+        "--web-port",
+        "8080",
+        "--web-hostname",
+        "127.0.0.1"
+      ],
+      "port": 8080
+    }
+  ]
+}

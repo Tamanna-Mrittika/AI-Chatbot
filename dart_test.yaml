@@ -1,0 +1,10 @@
+# Test configuration.
+#
+# The `live` tag marks tests that call the real OpenRouter API. They are
+# skipped by default so `flutter test` stays offline, deterministic and free of
+# rate limits. Run them deliberately with:
+#
+#   flutter test --dart-define-from-file=env.json --run-skipped -t live
+tags:
+  live:
+    skip: "Hits the live API; run with --run-skipped -t live"

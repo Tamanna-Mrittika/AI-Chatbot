@@ -1,0 +1,56 @@
+// Printing is the point here: the timings show deltas arriving separately.
+// ignore_for_file: avoid_print
+@Tags(['live'])
+library;
+
+import 'package:ai_chatbot/src/core/constants/app_constants.dart';
+import 'package:ai_chatbot/src/features/chat/data/gemini_chat_repository.dart';
+import 'package:ai_chatbot/src/features/chat/domain/chat_message.dart';
+import 'package:ai_chatbot/src/features/chat/domain/message_role.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+
+/// Hits the real Google Gemini API. Run with:
+///   flutter test --dart-define-from-file=env.json --run-skipped -t live \
+///     test/live_gemini_test.dart
+void main() {
+  test('streams a real reply from Gemini', () async {
+    final key = AppConstants.buildTimeGeminiKey;
+    expect(key, isNotEmpty, reason: 'no Gemini key injected');
+
+    final client = http.Client();
+    addTearDown(client.close);
+
+    final repo = GeminiChatRepository(client: client, apiKeyReader: () => key);
+
+    final deltas = <String>[];
+    final stopwatch = Stopwatch()..start();
+
+    await for (final delta in repo.streamReply(
+      history: [
+        ChatMessage(
+          id: '1',
+          role: MessageRole.user,
+          text: 'List the four seasons, one per line, one short sentence each.',
+          createdAt: DateTime.now(),
+        ),
+      ],
+      model: AppConstants.defaultGeminiModel,
+      systemPrompt: 'Be brief.',
+    )) {
+      deltas.add(delta);
+      if (deltas.length <= 8) {
+        print(
+          '[+${stopwatch.elapsedMilliseconds}ms] delta ${deltas.length}: '
+          '${delta.replaceAll('\n', r'\n')}',
+        );
+      }
+    }
+
+    print(
+      'TOTAL deltas: ${deltas.length} in ${stopwatch.elapsedMilliseconds}ms',
+    );
+    print('TEXT:\n${deltas.join()}');
+    expect(deltas, isNotEmpty);
+  }, timeout: const Timeout(Duration(seconds: 90)));
+}
